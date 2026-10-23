@@ -1,0 +1,36 @@
+
+name: Build ESP8266 firmware
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'esp8266_smooth_car.ino'
+      - '.github/workflows/build.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: arduino/setup-arduino-cli@v2
+
+      - name: Install ESP8266 platform
+        run: |
+          arduino-cli config init
+          arduino-cli core update-index
+          arduino-cli core install esp8266:esp8266
+
+      - name: Compile
+        run: |
+          mkdir -p esp8266_smooth_car build
+          cp esp8266_smooth_car.ino esp8266_smooth_car/esp8266_smooth_car.ino
+          arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2 --output-dir build esp8266_smooth_car
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: esp8266-smooth-car-firmware
+          path: build/*.bin
+          if-no-files-found: error
+          
